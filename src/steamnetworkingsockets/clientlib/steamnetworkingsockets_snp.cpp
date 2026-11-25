@@ -2139,7 +2139,10 @@ template<bool k_bUnreliableOnly> struct SNPSegmentCollector<k_bUnreliableOnly,fa
 			} else {
 				pNewLane->m_hdr[0] = 0x8f;
 				uint8 *p = SerializeVarInt( &pNewLane->m_hdr[1], (unsigned)nLaneID );
-				pNewLane->m_cbHdr = p - &pNewLane->m_hdr[1];
+				// The header is the 0x8f byte *and* the varint lane number. Measuring from m_hdr[1]
+				// copied 0x8f alone and dropped the lane number: the receiver then read the next
+				// frame's first byte as the lane and misdecoded the rest of the packet (lanes >= 8).
+				pNewLane->m_cbHdr = p - &pNewLane->m_hdr[0];
 			}
 			m_cbRemainingForSegments -= pNewLane->m_cbHdr;
 		}
